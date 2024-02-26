@@ -44,23 +44,53 @@ const getQuizletSet = async () => {
     const { setTitle, canonicalUrl, socialImageUrl, dehydratedReduxStateKey, ...studyModeData } = JSON.parse(raw).props.pageProps;
     // const doc = Object.values(JSON.parse(studyModeData).studyModeData.studiableDocumentData.studiableItems);
     const doc = studyModeData.studyModeData.studiableDocumentData.studiableItems;
+    const options = studyModeData.studyModeData.studiableDocumentData?.studiableMetadataByType[4];
 
-    doc.map((el)=>{
+    const questionsAnswers = [];
+
+    doc.map((el, firstKey)=>{
       const rank = el.rank;
+      const getOptions = options.find(id => id.studiableItemId === el.id)?.distractors;
+
       if(el.cardSides) {
-        el.cardSides.map((side)=>{
-          const label = side.label;
+        const questionAnswer = {
+          question_no: rank,
+          url,
+        }
+
+        const option = [];
+
+        if(getOptions) {
+          getOptions.map((el)=> {
+            option.push(el.media[0].plainText);
+            // console.log(el, '#################');
+          })
+        }
+        questionAnswer.options = option ? option : {};
+
+        el.cardSides.map((side, key)=>{
             side.media.map((sl)=>{
-                console.log(rank, ' ', label, ' = ', sl.url ? sl.url : sl.plainText);
+              if(key === 1) {
+                  if(sl.url) {
+                    questionAnswer.url = sl.url ? sl.url : '';
+                  }
+                  if(sl.plainText) {
+                    questionAnswer.Question = sl.plainText ? sl.plainText : '';
+                  }
+              }
+              if(key === 0) {
+                  questionAnswer.Answer = sl.plainText ? sl.plainText : '';
+              }
             })
         });
+        questionsAnswers.push(questionAnswer);
       }
     });
 
-    // console.log(doc, '@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
+    console.log(questionsAnswers, '@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
 
 
-    return doc;
+    return questionsAnswers;
 
     // const cards = terms.map(({
     //   word: front,
